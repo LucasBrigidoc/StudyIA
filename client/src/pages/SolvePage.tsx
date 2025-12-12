@@ -190,7 +190,6 @@ export default function SolvePage() {
                 <FolderSelector
                   selectedFolderId={selectedFolderId}
                   onSelect={setSelectedFolderId}
-                  onCreateNew={() => setShowCreateFolder(true)}
                 />
                 <p className="text-xs text-muted-foreground">
                   Selecione uma pasta com seus materiais de estudo para a IA usar como referência

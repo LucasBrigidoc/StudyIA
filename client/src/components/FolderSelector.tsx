@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
-import { Folder, Plus, ChevronDown } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Folder } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -13,7 +12,6 @@ import { type ContextFolder, getAllFolders, getFolderFileCount } from "@/lib/ind
 interface FolderSelectorProps {
   selectedFolderId: string | null;
   onSelect: (folderId: string | null) => void;
-  onCreateNew: () => void;
 }
 
 interface FolderWithCount extends ContextFolder {
@@ -23,7 +21,6 @@ interface FolderWithCount extends ContextFolder {
 export function FolderSelector({
   selectedFolderId,
   onSelect,
-  onCreateNew,
 }: FolderSelectorProps) {
   const [folders, setFolders] = useState<FolderWithCount[]>([]);
   const [loading, setLoading] = useState(true);
@@ -56,12 +53,12 @@ export function FolderSelector({
   }
 
   return (
-    <div className="flex gap-2">
+    <div>
       <Select
         value={selectedFolderId || ""}
         onValueChange={(value) => onSelect(value || null)}
       >
-        <SelectTrigger className="flex-1" data-testid="select-folder">
+        <SelectTrigger className="w-full" data-testid="select-folder">
           <SelectValue placeholder="Selecione uma pasta de contexto">
             {selectedFolderId && folders.find(f => f.id === selectedFolderId) ? (
               <div className="flex items-center gap-2">
@@ -96,14 +93,6 @@ export function FolderSelector({
           )}
         </SelectContent>
       </Select>
-      <Button
-        variant="outline"
-        size="icon"
-        onClick={onCreateNew}
-        data-testid="button-create-folder"
-      >
-        <Plus className="h-4 w-4" />
-      </Button>
     </div>
   );
 }
