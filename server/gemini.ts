@@ -98,12 +98,25 @@ ETAPA 1 — INTERPRETAÇÃO E DETECÇÃO DE DADOS FALTANTES
 - Relacione com materiais da pasta (slide, fórmula, exemplo) se disponíveis
 - Crie um plano de solução
 
-ETAPA 2 — SOLUÇÃO A COM CITAÇÃO DE FONTES
-- Resolva passo a passo cada item
+ETAPA 2 — SOLUÇÃO A COM CITAÇÃO DE FONTES (EXTREMAMENTE DETALHADA)
+- Resolva passo a passo cada item DE FORMA MUITO DETALHADA
 - Para CADA fórmula usada, cite a fonte exata: "Fórmula X (Slide 3)" ou "Equação Y (página 45 do livro)" ou "Fórmula Z (conhecimento geral de física)"
 - Usando EXATAMENTE as fórmulas/métodos do material (se disponível)
-- Com unidades, substituições e cálculos organizados
 - Para cada item (A, B, C), mostre a resolução separada
+
+REGRAS PARA CÁLCULOS DETALHADOS (MUITO IMPORTANTE):
+1. SEMPRE mostre a fórmula original primeiro: $$F = m \cdot a$$
+2. SEMPRE substitua os valores na fórmula mostrando cada número: $$F = 5 \, \text{kg} \cdot 2 \, \text{m/s}^2$$
+3. SEMPRE mostre cálculos intermediários quando houver operações: $$F = 10 \, \text{N}$$
+4. Para divisões/multiplicações complexas, mostre o passo a passo:
+   - Primeiro: identifique os valores
+   - Depois: substitua na fórmula
+   - Em seguida: resolva numerador e denominador separadamente se aplicável
+   - Por fim: calcule o resultado final
+5. SEMPRE inclua as unidades em cada passo do cálculo
+6. Use formatação LaTeX clara: $$\sigma = \frac{F}{A} = \frac{1000 \, \text{N}}{0.01 \, \text{m}^2} = 100000 \, \text{Pa} = 100 \, \text{kPa}$$
+7. Para conversões de unidades, mostre explicitamente: $$100000 \, \text{Pa} = 100000 \times 10^{-3} \, \text{kPa} = 100 \, \text{kPa}$$
+8. Numere cada passo: "Passo 1:", "Passo 2:", etc.
 
 ETAPA 3 — VERIFICAÇÃO DE ADERÊNCIA  
 - Confira se a solução segue o professor/material  
@@ -163,7 +176,7 @@ IMPORTANTE: Retorne APENAS um JSON válido no seguinte formato (sem markdown, se
       "description": "O que o item A está pedindo",
       "formulas": ["$$F = ma$$", "$$v = v_0 + at$$"],
       "concepts": ["Segunda Lei de Newton", "MRUV"],
-      "detailedCalculation": "## Cálculo Detalhado\\n\\n**Passo 1:** Identificar...\\n**Passo 2:** Substituir valores...\\n**Passo 3:** Calcular...",
+      "detailedCalculation": "## Cálculo Detalhado\\n\\n**Passo 1: Identificar os dados do problema**\\n- Massa: $m = 5 \\\\, \\\\text{kg}$\\n- Aceleração: $a = 2 \\\\, \\\\text{m/s}^2$\\n\\n**Passo 2: Escolher a fórmula apropriada**\\nUsaremos a Segunda Lei de Newton:\\n$$F = m \\\\cdot a$$\\n\\n**Passo 3: Substituir os valores na fórmula**\\n$$F = 5 \\\\, \\\\text{kg} \\\\cdot 2 \\\\, \\\\text{m/s}^2$$\\n\\n**Passo 4: Realizar o cálculo**\\n$$F = 5 \\\\times 2 = 10$$\\n\\n**Passo 5: Expressar o resultado com unidade**\\n$$F = 10 \\\\, \\\\text{N}$$\\n\\n**Verificação dimensional:**\\n$[\\\\text{kg}] \\\\cdot [\\\\text{m/s}^2] = [\\\\text{kg} \\\\cdot \\\\text{m/s}^2] = [\\\\text{N}]$ ✓",
       "finalResult": "$$x = 10 \\text{ m}$$",
       "solutionSteps": [
         {"title": "Identificação dos dados", "content": "Massa m = 5kg..."},
