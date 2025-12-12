@@ -292,7 +292,55 @@ export async function extractTextFromImage(imageBase64: string, mimeType: string
           mimeType: mimeType,
         },
       },
-      `Extraia TODO o texto visível nesta imagem. Se for uma questão de prova ou exercício, transcreva o enunciado completo, incluindo todos os itens (a, b, c, etc.), valores numéricos, fórmulas e condições. Mantenha a formatação original o máximo possível.`,
+      `Você é um especialista em análise de questões de engenharia e ciências exatas. Analise esta imagem com EXTREMO DETALHE.
+
+INSTRUÇÕES PARA EXTRAÇÃO:
+
+1. TEXTO DO ENUNCIADO:
+   - Transcreva TODO o texto visível na imagem
+   - Inclua todos os itens (a, b, c, etc.)
+   - Preserve todos os valores numéricos com suas unidades
+   - Mantenha fórmulas e símbolos matemáticos
+
+2. ANÁLISE DE DIAGRAMAS E FIGURAS (MUITO IMPORTANTE):
+   Se houver diagramas, figuras, esquemas ou desenhos técnicos, DESCREVA DETALHADAMENTE:
+   
+   Para BARRAS/VIGAS/ESTRUTURAS:
+   - Identifique os pontos/nós (A, B, C, etc.)
+   - Descreva as dimensões e comprimentos de cada seção
+   - Identifique os materiais de cada parte (aço, latão, alumínio, etc.)
+   - Descreva os diâmetros ou áreas das seções transversais
+   - Identifique os tipos de apoio (fixo, móvel, engaste, articulação)
+   - Descreva as forças aplicadas (magnitude, direção, ponto de aplicação)
+   
+   Para CIRCUITOS/DIAGRAMAS ELÉTRICOS:
+   - Identifique todos os componentes e seus valores
+   - Descreva as conexões entre componentes
+   
+   Para DIAGRAMAS DE ESFORÇOS:
+   - Descreva as forças cortantes e momentos fletores
+   - Identifique pontos de máximo e mínimo
+   
+   Para GRÁFICOS:
+   - Descreva os eixos e escalas
+   - Identifique pontos importantes e tendências
+
+3. FORMATO DA RESPOSTA:
+   Organize assim:
+   
+   **ENUNCIADO:**
+   [texto completo da questão]
+   
+   **DESCRIÇÃO DO DIAGRAMA:**
+   [descrição detalhada do que aparece na figura]
+   
+   **DADOS EXTRAÍDOS DA FIGURA:**
+   - [lista de todas as dimensões, materiais, forças visíveis no diagrama]
+   
+   **CONDIÇÕES DE CONTORNO:**
+   - [tipos de apoio, restrições de movimento, etc.]
+
+Esta descrição detalhada é ESSENCIAL para resolver o problema corretamente.`,
     ];
 
     const response = await ai.models.generateContent({
