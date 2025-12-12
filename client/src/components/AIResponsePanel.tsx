@@ -150,6 +150,34 @@ export function AIResponsePanel({ response, isLoading }: AIResponsePanelProps) {
     }
   };
 
+  const parseAnswersByQuestion = (text: string): { number: string; title: string; content: string }[] => {
+    const lines = text.split('\n');
+    const questions: { number: string; title: string; content: string }[] = [];
+    let currentQuestion: { number: string; title: string; content: string } | null = null;
+    
+    for (const line of lines) {
+      const match = line.match(/^(\d+)\.\s*(.+)/);
+      if (match) {
+        if (currentQuestion) {
+          questions.push(currentQuestion);
+        }
+        currentQuestion = {
+          number: match[1],
+          title: match[2].trim(),
+          content: ''
+        };
+      } else if (currentQuestion) {
+        currentQuestion.content += (currentQuestion.content ? '\n' : '') + line;
+      }
+    }
+    
+    if (currentQuestion) {
+      questions.push(currentQuestion);
+    }
+    
+    return questions;
+  };
+
   return (
     <ScrollArea className="h-full">
       <div className="space-y-4 p-1">
@@ -350,70 +378,129 @@ export function AIResponsePanel({ response, isLoading }: AIResponsePanelProps) {
           </CardContent>
         </Card>
 
-        <Card className="border-primary" data-testid="section-final">
-          <CardHeader className="flex flex-row items-center justify-between gap-2 pb-2 bg-primary/5">
-            <CardTitle className="text-base flex items-center gap-2">
-              <CheckCircle className="h-4 w-4 text-primary" />
-              Resposta Final
-            </CardTitle>
+        <div className="space-y-4">
+          <div className="flex items-center justify-between gap-2">
+            <h3 className="text-lg font-semibold flex items-center gap-2">
+              <CheckCircle className="h-5 w-5 text-primary" />
+              Respostas Finais
+            </h3>
             <Button
               size="sm"
-              variant="ghost"
+              variant="outline"
               onClick={() => copyToClipboard(response.finalAnswer, "final")}
               data-testid="button-copy-final"
             >
               {copiedSection === "final" ? (
-                <CheckCircle className="h-4 w-4 text-green-500" />
+                <>
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  Copiado
+                </>
               ) : (
-                <Copy className="h-4 w-4" />
+                <>
+                  <Copy className="h-4 w-4" />
+                  Copiar Tudo
+                </>
               )}
             </Button>
-          </CardHeader>
-          <CardContent className="pt-4">
-            <div className="prose prose-sm dark:prose-invert max-w-none">
-              <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]}>
-                {response.finalAnswer}
-              </ReactMarkdown>
-            </div>
+          </div>
 
-            {response.usedMaterials.length > 0 && (
-              <div className="mt-4 pt-4 border-t">
-                <p className="text-sm font-medium mb-2">Materiais utilizados:</p>
-                <div className="flex flex-wrap gap-2">
-                  {response.usedMaterials.map((material, i) => (
-                    <Badge key={i} variant="secondary">
-                      {material}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {response.sourceCitations && response.sourceCitations.length > 0 && (
-              <div className="mt-4 pt-4 border-t">
-                <p className="text-sm font-medium mb-2 flex items-center gap-2">
-                  <BookMarked className="h-4 w-4" />
-                  Fórmulas e Fontes:
-                </p>
-                <div className="space-y-2">
-                  {response.sourceCitations.map((citation, i) => (
-                    <div key={i} className="flex items-center gap-2 text-sm bg-muted p-2 rounded-md">
-                      <code className="font-mono text-primary">{citation.formula}</code>
-                      <span className="text-muted-foreground">-</span>
-                      <span className="text-muted-foreground">{citation.source}</span>
+          {(() => {
+            const parsedQuestions = parseAnswersByQuestion(response.finalAnswer);
+            if (parsedQuestions.length > 1) {
+              return parsedQuestions.map((q, i) => (
+                <Card key={i} className="border-primary/50" data-testid={`section-final-q${q.number}`}>
+                  <CardHeader className="pb-2 bg-primary/5">
+                    <CardTitle className="text-base flex items-center gap-3">
+                      <Badge variant="default" className="text-sm px-3 py-1">
+                        Questão {q.number}
+                      </Badge>
+                      <span className="text-sm font-normal text-muted-foreground truncate">
+                        {q.title}
+                      </span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-4">
+                    <div className="prose prose-sm dark:prose-invert max-w-none">
+                      <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]}>
+                        {q.content || q.title}
+                      </ReactMarkdown>
                     </div>
-                  ))}
-                </div>
-              </div>
-            )}
+                  </CardContent>
+                </Card>
+              ));
+            } else {
+              return (
+                <Card className="border-primary" data-testid="section-final">
+                  <CardContent className="pt-4">
+                    <div className="prose prose-sm dark:prose-invert max-w-none">
+                      <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]}>
+                        {response.finalAnswer}
+                      </ReactMarkdown>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            }
+          })()}
+        </div>
 
-            <div className="mt-4 pt-4 border-t">
-              <p className="text-sm font-medium mb-2">Versão curta (para prova):</p>
-              <div className="bg-muted p-3 rounded-md prose prose-sm dark:prose-invert max-w-none">
-                <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]}>
-                  {response.shortVersion}
-                </ReactMarkdown>
+        {response.usedMaterials.length > 0 && (
+          <Card data-testid="section-materials">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base flex items-center gap-2">
+                <BookMarked className="h-4 w-4 text-primary" />
+                Materiais Utilizados
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-wrap gap-2">
+                {response.usedMaterials.map((material, i) => (
+                  <Badge key={i} variant="secondary">
+                    {material}
+                  </Badge>
+                ))}
               </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {response.sourceCitations && response.sourceCitations.length > 0 && (
+          <Card data-testid="section-citations">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base flex items-center gap-2">
+                <BookMarked className="h-4 w-4 text-primary" />
+                Fórmulas e Fontes
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {response.sourceCitations.map((citation, i) => (
+                  <div key={i} className="flex items-start gap-3 text-sm bg-muted p-3 rounded-md">
+                    <div className="prose prose-sm dark:prose-invert flex-1">
+                      <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]}>
+                        {citation.formula}
+                      </ReactMarkdown>
+                    </div>
+                    <span className="text-muted-foreground flex-shrink-0">{citation.source}</span>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        <Card data-testid="section-short">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base flex items-center gap-2">
+              <FileText className="h-4 w-4 text-primary" />
+              Versão Curta (para prova)
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="bg-muted p-4 rounded-md prose prose-sm dark:prose-invert max-w-none">
+              <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]}>
+                {response.shortVersion}
+              </ReactMarkdown>
             </div>
           </CardContent>
         </Card>
