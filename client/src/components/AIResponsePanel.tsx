@@ -317,25 +317,38 @@ export function AIResponsePanel({ response, isLoading }: AIResponsePanelProps) {
               const isItemStepsExpanded = expandedSteps.includes(itemStepId);
               
               return (
-                <Card key={i} data-testid={`item-${item.letter}`}>
-                  <CardHeader className="pb-2 bg-primary/5">
-                    <CardTitle className="text-base flex items-center gap-3">
-                      <Badge variant="default" className="text-sm px-3 py-1">
+                <Card key={i} data-testid={`item-${item.letter}`} className="border-2 border-primary/30">
+                  <CardHeader className="pb-3 bg-gradient-to-r from-primary/10 to-primary/5">
+                    <CardTitle className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3">
+                      <Badge variant="default" className="text-base sm:text-lg px-4 py-2 font-bold shrink-0">
                         Item {item.letter}
                       </Badge>
-                      <span className="text-sm font-normal">{item.description}</span>
+                      <span className="text-sm sm:text-base font-medium text-foreground/80 break-words">
+                        {item.description}
+                      </span>
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="pt-4 space-y-4">
                     {(item.formulas && item.formulas.length > 0) && (
-                      <div className="bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 p-4 rounded-md">
-                        <p className="text-sm font-semibold text-green-800 dark:text-green-200 mb-2 flex items-center gap-2">
-                          <Calculator className="h-4 w-4" />
-                          Fórmulas para usar na prova:
-                        </p>
+                      <div className="bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-950 dark:to-yellow-950 border border-amber-300 dark:border-amber-700 p-4 rounded-md">
+                        <div className="flex items-center gap-2 mb-3">
+                          <div className="bg-amber-500 text-white p-1.5 rounded-md">
+                            <Calculator className="h-4 w-4" />
+                          </div>
+                          <p className="font-bold text-amber-800 dark:text-amber-200 text-sm sm:text-base">
+                            Fórmulas para Item {item.letter}
+                          </p>
+                        </div>
                         <div className="space-y-2">
                           {item.formulas.map((formula, fi) => (
-                            <div key={fi} className="bg-white dark:bg-green-900 p-3 rounded border border-green-300 dark:border-green-700 prose prose-sm dark:prose-invert max-w-none">
+                            <div 
+                              key={fi} 
+                              className="bg-white dark:bg-amber-900/50 p-3 sm:p-4 rounded border border-amber-200 dark:border-amber-700 prose prose-sm sm:prose-base dark:prose-invert max-w-none overflow-x-auto"
+                              style={{ 
+                                overflowWrap: 'break-word',
+                                wordBreak: 'break-word'
+                              }}
+                            >
                               <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]}>
                                 {formula}
                               </ReactMarkdown>
@@ -360,12 +373,22 @@ export function AIResponsePanel({ response, isLoading }: AIResponsePanelProps) {
                     )}
 
                     {item.finalResult && (
-                      <div className="bg-primary/10 border border-primary/30 p-4 rounded-md">
-                        <p className="text-sm font-semibold text-primary mb-2 flex items-center gap-2">
-                          <CheckCircle className="h-4 w-4" />
-                          Resultado Final:
-                        </p>
-                        <div className="prose prose-sm dark:prose-invert max-w-none text-lg font-medium">
+                      <div className="bg-gradient-to-r from-emerald-50 to-green-50 dark:from-emerald-950 dark:to-green-950 border-2 border-emerald-400 dark:border-emerald-600 p-4 sm:p-6 rounded-md shadow-sm">
+                        <div className="flex items-center gap-2 mb-3">
+                          <div className="bg-emerald-500 text-white p-2 rounded-full">
+                            <CheckCircle className="h-5 w-5" />
+                          </div>
+                          <p className="font-bold text-emerald-800 dark:text-emerald-200 text-base sm:text-lg">
+                            Resultado Final - Item {item.letter}
+                          </p>
+                        </div>
+                        <div 
+                          className="bg-white dark:bg-emerald-900/50 p-4 rounded-md border border-emerald-200 dark:border-emerald-700 prose prose-base sm:prose-lg dark:prose-invert max-w-none overflow-x-auto"
+                          style={{ 
+                            overflowWrap: 'break-word',
+                            wordBreak: 'break-word'
+                          }}
+                        >
                           <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]}>
                             {item.finalResult}
                           </ReactMarkdown>
@@ -374,13 +397,38 @@ export function AIResponsePanel({ response, isLoading }: AIResponsePanelProps) {
                     )}
 
                     {item.detailedCalculation && (
-                      <div className="bg-muted p-4 rounded-md">
-                        <p className="text-sm font-semibold mb-3 flex items-center gap-2">
-                          <Calculator className="h-4 w-4 text-primary" />
-                          Cálculo Detalhado:
-                        </p>
-                        <div className="prose prose-sm dark:prose-invert max-w-none">
-                          <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]}>
+                      <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950 dark:to-indigo-950 border border-blue-200 dark:border-blue-800 p-4 sm:p-6 rounded-md">
+                        <div className="flex items-center gap-2 mb-4 pb-3 border-b border-blue-200 dark:border-blue-700">
+                          <div className="bg-blue-500 text-white p-2 rounded-md">
+                            <Calculator className="h-5 w-5" />
+                          </div>
+                          <div>
+                            <p className="font-bold text-blue-800 dark:text-blue-200 text-base sm:text-lg">
+                              Cálculo Detalhado - Item {item.letter}
+                            </p>
+                            <p className="text-xs sm:text-sm text-blue-600 dark:text-blue-400">
+                              Resolução passo a passo com substituição de valores
+                            </p>
+                          </div>
+                        </div>
+                        <div 
+                          className="prose prose-sm sm:prose-base dark:prose-invert max-w-none overflow-x-auto"
+                          style={{ 
+                            overflowWrap: 'break-word',
+                            wordBreak: 'break-word'
+                          }}
+                        >
+                          <ReactMarkdown 
+                            remarkPlugins={[remarkGfm, remarkMath]} 
+                            rehypePlugins={[rehypeKatex]}
+                            components={{
+                              p: ({children}) => <p className="my-2 text-sm sm:text-base leading-relaxed">{children}</p>,
+                              strong: ({children}) => <strong className="text-blue-800 dark:text-blue-200 font-bold">{children}</strong>,
+                              h2: ({children}) => <h2 className="text-lg sm:text-xl font-bold mt-4 mb-2 text-blue-900 dark:text-blue-100">{children}</h2>,
+                              ul: ({children}) => <ul className="my-2 ml-4 space-y-1">{children}</ul>,
+                              li: ({children}) => <li className="text-sm sm:text-base">{children}</li>,
+                            }}
+                          >
                             {item.detailedCalculation}
                           </ReactMarkdown>
                         </div>
