@@ -28,6 +28,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
+import rehypeKatex from "rehype-katex";
+import "katex/dist/katex.min.css";
 
 interface QuestionItem {
   letter: string;
@@ -237,8 +239,10 @@ export function AIResponsePanel({ response, isLoading }: AIResponsePanelProps) {
             </Button>
           </CardHeader>
           <CardContent>
-            <div className="bg-muted p-4 rounded-md font-serif text-lg leading-relaxed">
-              {response.originalQuestion}
+            <div className="bg-muted p-4 rounded-md prose prose-sm dark:prose-invert max-w-none">
+              <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]}>
+                {response.originalQuestion}
+              </ReactMarkdown>
             </div>
           </CardContent>
         </Card>
@@ -253,9 +257,13 @@ export function AIResponsePanel({ response, isLoading }: AIResponsePanelProps) {
           <CardContent>
             <ul className="space-y-2">
               {response.extractedData.map((data, i) => (
-                <li key={i} className="flex items-start gap-2 font-mono text-sm bg-muted p-2 rounded">
-                  <span className="text-primary font-bold">{i + 1}.</span>
-                  <span>{data}</span>
+                <li key={i} className="flex items-start gap-3 text-sm bg-muted p-3 rounded-md">
+                  <Badge variant="outline" className="mt-0.5 flex-shrink-0">{i + 1}</Badge>
+                  <div className="prose prose-sm dark:prose-invert max-w-none flex-1">
+                    <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]}>
+                      {data}
+                    </ReactMarkdown>
+                  </div>
                 </li>
               ))}
             </ul>
@@ -285,7 +293,7 @@ export function AIResponsePanel({ response, isLoading }: AIResponsePanelProps) {
                   <div className="bg-muted p-4 rounded-md">
                     <p className="text-sm font-medium mb-2">Solução:</p>
                     <div className="prose prose-sm dark:prose-invert max-w-none">
-                      <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]}>
+                      <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]}>
                         {item.solution}
                       </ReactMarkdown>
                     </div>
@@ -331,7 +339,7 @@ export function AIResponsePanel({ response, isLoading }: AIResponsePanelProps) {
                   </CollapsibleTrigger>
                   <CollapsibleContent className="px-4 pb-4">
                     <div className="prose prose-sm dark:prose-invert max-w-none mt-2 bg-muted p-4 rounded-md">
-                      <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]}>
+                      <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]}>
                         {step.content}
                       </ReactMarkdown>
                     </div>
@@ -363,7 +371,7 @@ export function AIResponsePanel({ response, isLoading }: AIResponsePanelProps) {
           </CardHeader>
           <CardContent className="pt-4">
             <div className="prose prose-sm dark:prose-invert max-w-none">
-              <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]}>
+              <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]}>
                 {response.finalAnswer}
               </ReactMarkdown>
             </div>
@@ -401,8 +409,10 @@ export function AIResponsePanel({ response, isLoading }: AIResponsePanelProps) {
 
             <div className="mt-4 pt-4 border-t">
               <p className="text-sm font-medium mb-2">Versão curta (para prova):</p>
-              <div className="bg-muted p-3 rounded-md font-mono text-sm">
-                {response.shortVersion}
+              <div className="bg-muted p-3 rounded-md prose prose-sm dark:prose-invert max-w-none">
+                <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]}>
+                  {response.shortVersion}
+                </ReactMarkdown>
               </div>
             </div>
           </CardContent>
