@@ -62,6 +62,18 @@ export async function getAllFolders(): Promise<ContextFolder[]> {
   });
 }
 
+export async function getFolderById(id: string): Promise<ContextFolder | null> {
+  const database = await initDB();
+  return new Promise((resolve, reject) => {
+    const transaction = database.transaction("folders", "readonly");
+    const store = transaction.objectStore("folders");
+    const request = store.get(id);
+
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => resolve(request.result || null);
+  });
+}
+
 export async function createFolder(name: string): Promise<ContextFolder> {
   const database = await initDB();
   const folder: ContextFolder = {

@@ -6,8 +6,8 @@ import { UploadZone } from "@/components/UploadZone";
 import { FolderSelector } from "@/components/FolderSelector";
 import { AIResponsePanel } from "@/components/AIResponsePanel";
 import { CreateFolderDialog } from "@/components/CreateFolderDialog";
-import { createFolder, getFilesByFolder } from "@/lib/indexedDB";
-import { solveQuestion, extractTextFromImage, type SolveResponse } from "@/lib/api";
+import { createFolder, getFilesByFolder, getFolderById } from "@/lib/indexedDB";
+import { solveQuestion, extractTextFromImage, type SolveResponse, type FolderInfo } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 
 interface UploadedFile {
@@ -104,9 +104,20 @@ export default function SolvePage() {
     setResponse(null);
 
     try {
-      // Get context materials if folder is selected
+      // Get context materials and folder info if folder is selected
       let contextMaterials: string[] = [];
+      let folderInfo: FolderInfo | undefined;
+      
       if (selectedFolderId) {
+        const folder = await getFolderById(selectedFolderId);
+        if (folder) {
+          folderInfo = {
+            name: folder.name,
+            bookReference: folder.bookReference,
+            notes: folder.notes,
+          };
+        }
+        
         const folderFiles = await getFilesByFolder(selectedFolderId);
         
         // Extract text from context files
@@ -129,7 +140,7 @@ export default function SolvePage() {
         }
       }
 
-      const result = await solveQuestion(questionText, contextMaterials);
+      const result = await solveQuestion(questionText, contextMaterials, folderInfo);
       setResponse(result);
       
       toast({

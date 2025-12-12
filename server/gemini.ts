@@ -30,13 +30,32 @@ export interface SolveResponse {
   shortVersion: string;
 }
 
-function buildPrompt(questionText: string, contextMaterials: string[]): string {
+export interface FolderInfo {
+  name: string;
+  bookReference?: string;
+  notes?: string;
+}
+
+function buildPrompt(questionText: string, contextMaterials: string[], folderInfo?: FolderInfo): string {
   const materialsText = contextMaterials.length > 0 
     ? contextMaterials.join("\n\n---\n\n")
     : "Nenhum material de contexto fornecido. Use seu conhecimento geral.";
 
-  return `Você é o SolveAI, especialista em resolver questões acadêmicas usando um fluxo estruturado e verificações rigorosas.
+  let folderInfoText = "";
+  if (folderInfo) {
+    folderInfoText = `\n[INFORMAÇÕES DA MATÉRIA: ${folderInfo.name}]`;
+    if (folderInfo.bookReference) {
+      folderInfoText += `\nLIVRO DE REFERÊNCIA: ${folderInfo.bookReference}
+IMPORTANTE: Utilize as fórmulas, métodos e abordagem deste livro para resolver a questão. A resolução deve seguir o estilo e nomenclatura do livro indicado.`;
+    }
+    if (folderInfo.notes) {
+      folderInfoText += `\nINFORMAÇÕES ADICIONAIS DO PROFESSOR/ALUNO: ${folderInfo.notes}`;
+    }
+    folderInfoText += "\n";
+  }
 
+  return `Você é o SolveAI, especialista em resolver questões acadêmicas usando um fluxo estruturado e verificações rigorosas.
+${folderInfoText}
 ${contextMaterials.length > 0 ? "Use OBRIGATORIAMENTE os materiais da pasta fornecida abaixo:" : ""}
 
 [MATERIAIS DA PASTA]
@@ -124,13 +143,14 @@ export function validateApiKey(): boolean {
 
 export async function solveQuestion(
   questionText: string,
-  contextMaterials: string[]
+  contextMaterials: string[],
+  folderInfo?: FolderInfo
 ): Promise<SolveResponse> {
   if (!validateApiKey()) {
     throw new Error("GEMINI_API_KEY não está configurada. Configure a chave da API nas variáveis de ambiente.");
   }
 
-  const prompt = buildPrompt(questionText, contextMaterials);
+  const prompt = buildPrompt(questionText, contextMaterials, folderInfo);
 
   try {
     const response = await ai.models.generateContent({

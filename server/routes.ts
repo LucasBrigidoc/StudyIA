@@ -4,9 +4,16 @@ import { z } from "zod";
 import { solveQuestion, extractTextFromImage, validateApiKey } from "./gemini";
 
 // Zod schemas for request validation
+const folderInfoSchema = z.object({
+  name: z.string(),
+  bookReference: z.string().optional(),
+  notes: z.string().optional(),
+}).optional();
+
 const solveRequestSchema = z.object({
   questionText: z.string().min(1, "O texto da questão é obrigatório"),
   contextMaterials: z.array(z.string()).optional().default([]),
+  folderInfo: folderInfoSchema,
 });
 
 const extractTextRequestSchema = z.object({
@@ -38,9 +45,9 @@ export async function registerRoutes(
         });
       }
 
-      const { questionText, contextMaterials } = parseResult.data;
+      const { questionText, contextMaterials, folderInfo } = parseResult.data;
 
-      const result = await solveQuestion(questionText, contextMaterials);
+      const result = await solveQuestion(questionText, contextMaterials, folderInfo);
       
       res.json(result);
     } catch (error) {

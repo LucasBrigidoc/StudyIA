@@ -19,13 +19,21 @@ export interface SolveResponse {
   shortVersion: string;
 }
 
+export interface FolderInfo {
+  name: string;
+  bookReference?: string;
+  notes?: string;
+}
+
 export async function solveQuestion(
   questionText: string,
-  contextMaterials: string[]
+  contextMaterials: string[],
+  folderInfo?: FolderInfo
 ): Promise<SolveResponse> {
   const response = await apiRequest("POST", "/api/solve", {
     questionText,
     contextMaterials,
+    folderInfo,
   });
 
   if (!response.ok) {
