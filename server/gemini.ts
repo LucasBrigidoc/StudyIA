@@ -97,10 +97,20 @@ ETAPA 6 — VERIFICAÇÃO MATEMÁTICA
 - Recalcular tudo  
 - Verificar unidades, arredondamento e lógica
 
-ETAPA 7 — RESPOSTA FINAL  
+ETAPA 7 — VERIFICAÇÃO REVERSA (BACK-CHECK)
+- Pegue a resposta final obtida
+- Substitua de volta na equação/problema original
+- Verifique se os valores batem e fazem sentido
+- Para equações: substitua o valor encontrado e confirme que ambos os lados são iguais
+- Para física/química: use o resultado para recalcular um dado conhecido do problema
+- Verifique se a ordem de grandeza faz sentido (ex: velocidade de carro não pode ser 50.000 km/h)
+- Se a verificação falhar, identifique o erro e corrija a solução
+
+ETAPA 8 — RESPOSTA FINAL  
 - Resposta final validada para cada item
 - Passo a passo
 - Fórmulas usadas
+- Resultado da verificação reversa
 - Versão curta para prova
 - Indicação do material utilizado (se houver)
 
@@ -127,6 +137,7 @@ IMPORTANTE: Retorne APENAS um JSON válido no seguinte formato (sem markdown, se
     {"title": "Solução B", "content": "segunda resolução"},
     {"title": "Consistência", "content": "comparação"},
     {"title": "Verificação Matemática", "content": "recálculo"},
+    {"title": "Verificação Reversa", "content": "substituição da resposta no problema original para confirmar"},
     {"title": "Resposta Final", "content": "validação final"}
   ],
   "finalAnswer": "Resposta final formatada em markdown com todas as respostas",
