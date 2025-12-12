@@ -1,16 +1,80 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
-import { storage } from "./storage";
+import { z } from "zod";
+import { solveQuestion, extractTextFromImage, validateApiKey } from "./gemini";
+
+// Zod schemas for request validation
+const solveRequestSchema = z.object({
+  questionText: z.string().min(1, "O texto da questão é obrigatório"),
+  contextMaterials: z.array(z.string()).optional().default([]),
+});
+
+const extractTextRequestSchema = z.object({
+  imageBase64: z.string().min(1, "A imagem em base64 é obrigatória"),
+  mimeType: z.string().optional().default("image/jpeg"),
+});
 
 export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
-  // put application routes here
-  // prefix all routes with /api
+  // Health check for API key
+  app.get("/api/health", (req, res) => {
+    res.json({ 
+      status: "ok",
+      geminiConfigured: validateApiKey(),
+    });
+  });
 
-  // use storage to perform CRUD operations on the storage interface
-  // e.g. storage.insertUser(user) or storage.getUserByUsername(username)
+  // Solve question endpoint
+  app.post("/api/solve", async (req, res) => {
+    try {
+      // Validate request body
+      const parseResult = solveRequestSchema.safeParse(req.body);
+      
+      if (!parseResult.success) {
+        return res.status(400).json({ 
+          error: parseResult.error.errors[0]?.message || "Dados inválidos" 
+        });
+      }
+
+      const { questionText, contextMaterials } = parseResult.data;
+
+      const result = await solveQuestion(questionText, contextMaterials);
+      
+      res.json(result);
+    } catch (error) {
+      console.error("Error solving question:", error);
+      res.status(500).json({ 
+        error: error instanceof Error ? error.message : "Erro ao resolver questão" 
+      });
+    }
+  });
+
+  // Extract text from image using Gemini Vision
+  app.post("/api/extract-text", async (req, res) => {
+    try {
+      // Validate request body
+      const parseResult = extractTextRequestSchema.safeParse(req.body);
+      
+      if (!parseResult.success) {
+        return res.status(400).json({ 
+          error: parseResult.error.errors[0]?.message || "Dados inválidos" 
+        });
+      }
+
+      const { imageBase64, mimeType } = parseResult.data;
+
+      const text = await extractTextFromImage(imageBase64, mimeType);
+      
+      res.json({ text });
+    } catch (error) {
+      console.error("Error extracting text:", error);
+      res.status(500).json({ 
+        error: error instanceof Error ? error.message : "Erro ao extrair texto" 
+      });
+    }
+  });
 
   return httpServer;
 }

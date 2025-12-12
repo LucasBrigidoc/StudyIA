@@ -7,6 +7,7 @@ import { FolderSelector } from "@/components/FolderSelector";
 import { AIResponsePanel } from "@/components/AIResponsePanel";
 import { CreateFolderDialog } from "@/components/CreateFolderDialog";
 import { createFolder, getFilesByFolder } from "@/lib/indexedDB";
+import { solveQuestion, extractTextFromImage, type SolveResponse } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 
 interface UploadedFile {
@@ -16,47 +17,78 @@ interface UploadedFile {
   extractedText?: string;
 }
 
-interface AIResponse {
-  originalQuestion: string;
-  extractedData: string[];
-  questionItems: {
-    letter: string;
-    description: string;
-    solution: string;
-  }[];
-  steps: {
-    title: string;
-    content: string;
-  }[];
-  finalAnswer: string;
-  usedMaterials: string[];
-  shortVersion: string;
-}
-
 export default function SolvePage() {
   const [files, setFiles] = useState<UploadedFile[]>([]);
   const [questionText, setQuestionText] = useState("");
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isResolving, setIsResolving] = useState(false);
-  const [response, setResponse] = useState<AIResponse | null>(null);
+  const [response, setResponse] = useState<SolveResponse | null>(null);
   const [showCreateFolder, setShowCreateFolder] = useState(false);
   const { toast } = useToast();
 
   const handleFilesChange = useCallback(async (newFiles: UploadedFile[]) => {
     setFiles(newFiles);
     
-    if (newFiles.length > 0 && !questionText) {
+    if (newFiles.length > 0) {
       setIsProcessing(true);
       
-      // Simulate OCR processing - in real app this would use Tesseract.js
-      setTimeout(() => {
-        // todo: implement real OCR with Tesseract.js
-        setQuestionText("Texto extraído do arquivo será exibido aqui após o processamento OCR...");
+      try {
+        // Extract text from each file using Gemini Vision
+        const extractedTexts: string[] = [];
+        
+        for (const uploadedFile of newFiles) {
+          if (uploadedFile.file.type.startsWith("image/")) {
+            // Convert file to base64
+            const reader = new FileReader();
+            const base64 = await new Promise<string>((resolve) => {
+              reader.onload = () => {
+                const result = reader.result as string;
+                // Remove the data URL prefix
+                const base64Data = result.split(",")[1];
+                resolve(base64Data);
+              };
+              reader.readAsDataURL(uploadedFile.file);
+            });
+            
+            const text = await extractTextFromImage(base64, uploadedFile.file.type);
+            if (text) {
+              extractedTexts.push(text);
+            }
+          } else if (uploadedFile.file.type === "application/pdf") {
+            // For PDFs, we'll use the same approach - convert to image via Gemini
+            const reader = new FileReader();
+            const base64 = await new Promise<string>((resolve) => {
+              reader.onload = () => {
+                const result = reader.result as string;
+                const base64Data = result.split(",")[1];
+                resolve(base64Data);
+              };
+              reader.readAsDataURL(uploadedFile.file);
+            });
+            
+            const text = await extractTextFromImage(base64, "application/pdf");
+            if (text) {
+              extractedTexts.push(text);
+            }
+          }
+        }
+        
+        if (extractedTexts.length > 0) {
+          setQuestionText(extractedTexts.join("\n\n"));
+        }
+      } catch (error) {
+        console.error("Error extracting text:", error);
+        toast({
+          title: "Erro na extração",
+          description: "Não foi possível extrair o texto dos arquivos. Tente colar o texto manualmente.",
+          variant: "destructive",
+        });
+      } finally {
         setIsProcessing(false);
-      }, 1500);
+      }
     }
-  }, [questionText]);
+  }, [toast]);
 
   const handleResolve = async () => {
     if (!questionText.trim()) {
@@ -76,74 +108,44 @@ export default function SolvePage() {
       let contextMaterials: string[] = [];
       if (selectedFolderId) {
         const folderFiles = await getFilesByFolder(selectedFolderId);
-        contextMaterials = folderFiles.map(f => f.name);
+        
+        // Extract text from context files
+        for (const file of folderFiles) {
+          if (file.extractedText) {
+            contextMaterials.push(`[${file.name}]\n${file.extractedText}`);
+          } else if (file.type.startsWith("image/") || file.type === "application/pdf") {
+            // Try to extract text from images in context
+            try {
+              const base64Data = file.data.split(",")[1];
+              const text = await extractTextFromImage(base64Data, file.type);
+              if (text) {
+                contextMaterials.push(`[${file.name}]\n${text}`);
+              }
+            } catch (e) {
+              // If extraction fails, just add the file name
+              contextMaterials.push(`[${file.name}] - Arquivo de contexto`);
+            }
+          }
+        }
       }
 
-      // todo: implement real API call to backend
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
-      // Mock response for demonstration
-      const mockResponse: AIResponse = {
-        originalQuestion: questionText,
-        extractedData: [
-          "Dado 1 extraído da questão",
-          "Dado 2 extraído da questão",
-          "Dado 3 extraído da questão",
-        ],
-        questionItems: detectQuestionItems(questionText),
-        steps: [
-          { title: "Interpretação", content: "Análise do enunciado e identificação dos dados fornecidos." },
-          { title: "Solução A", content: "Primeira resolução seguindo o método do material." },
-          { title: "Verificação de Aderência", content: "Conferência se a solução segue o professor/material." },
-          { title: "Solução B", content: "Segunda resolução independente usando mesmo método." },
-          { title: "Consistência", content: "Comparação das soluções A e B." },
-          { title: "Verificação Matemática", content: "Recálculo e verificação de unidades." },
-          { title: "Resposta Final", content: "Resposta validada e confirmada." },
-        ],
-        finalAnswer: "A resposta final será exibida aqui após a análise completa da IA.",
-        usedMaterials: contextMaterials.length > 0 ? contextMaterials : ["Nenhum material de contexto selecionado"],
-        shortVersion: "Versão resumida para prova",
-      };
-
-      setResponse(mockResponse);
+      const result = await solveQuestion(questionText, contextMaterials);
+      setResponse(result);
+      
+      toast({
+        title: "Questão resolvida!",
+        description: "A IA analisou sua questão e gerou a resolução completa.",
+      });
     } catch (error) {
+      console.error("Error solving question:", error);
       toast({
         title: "Erro ao resolver",
-        description: "Ocorreu um erro ao processar sua questão. Tente novamente.",
+        description: error instanceof Error ? error.message : "Ocorreu um erro ao processar sua questão. Tente novamente.",
         variant: "destructive",
       });
     } finally {
       setIsResolving(false);
     }
-  };
-
-  const detectQuestionItems = (text: string): { letter: string; description: string; solution: string }[] => {
-    const items: { letter: string; description: string; solution: string }[] = [];
-    const regex = /([a-e])\s*\)|item\s+([a-e])/gi;
-    let match;
-    const letters: string[] = [];
-
-    while ((match = regex.exec(text)) !== null) {
-      const letter = (match[1] || match[2]).toLowerCase();
-      if (!letters.includes(letter)) {
-        letters.push(letter);
-      }
-    }
-
-    if (letters.length === 0) {
-      return [];
-    }
-
-    letters.forEach(letter => {
-      items.push({
-        letter: letter.toUpperCase(),
-        description: `Item ${letter.toUpperCase()}) da questão será analisado aqui`,
-        solution: "A solução detalhada para este item será gerada pela IA.",
-      });
-    });
-
-    return items;
   };
 
   const handleCreateFolder = async (name: string) => {
@@ -195,13 +197,13 @@ export default function SolvePage() {
                 className="w-full"
                 size="lg"
                 onClick={handleResolve}
-                disabled={!questionText.trim() || isResolving}
+                disabled={!questionText.trim() || isResolving || isProcessing}
                 data-testid="button-resolve"
               >
                 {isResolving ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Resolvendo...
+                    Resolvendo com IA...
                   </>
                 ) : (
                   <>
