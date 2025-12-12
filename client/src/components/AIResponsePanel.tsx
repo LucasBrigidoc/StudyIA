@@ -34,6 +34,14 @@ import "katex/dist/katex.min.css";
 interface QuestionItem {
   letter: string;
   description: string;
+  formulas?: string[];
+  concepts?: string[];
+  detailedCalculation?: string;
+  finalResult?: string;
+  solutionSteps?: {
+    title: string;
+    content: string;
+  }[];
   solution: string;
 }
 
@@ -64,7 +72,7 @@ interface AIResponsePanelProps {
 }
 
 export function AIResponsePanel({ response, isLoading }: AIResponsePanelProps) {
-  const [expandedSteps, setExpandedSteps] = useState<string[]>(["step-1"]);
+  const [expandedSteps, setExpandedSteps] = useState<string[]>([]);
   const [copiedSection, setCopiedSection] = useState<string | null>(null);
 
   const copyToClipboard = async (text: string, section: string) => {
@@ -299,37 +307,135 @@ export function AIResponsePanel({ response, isLoading }: AIResponsePanelProps) {
         </Card>
 
         {response.questionItems.length > 0 && (
-          <Card data-testid="section-items">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base flex items-center gap-2">
-                <ListOrdered className="h-4 w-4 text-primary" />
-                Itens da Questão
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {response.questionItems.map((item, i) => (
-                <div key={i} className="border rounded-md p-4" data-testid={`item-${item.letter}`}>
-                  <div className="flex items-center gap-2 mb-3">
-                    <Badge variant="secondary" className="text-base px-3 py-1">
-                      {item.letter})
-                    </Badge>
-                    <span className="font-medium">O que pede:</span>
-                  </div>
-                  <p className="text-muted-foreground mb-4 pl-4 border-l-2 border-primary">
-                    {item.description}
-                  </p>
-                  <div className="bg-muted p-4 rounded-md">
-                    <p className="text-sm font-medium mb-2">Solução:</p>
-                    <div className="prose prose-sm dark:prose-invert max-w-none">
-                      <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]}>
-                        {item.solution}
-                      </ReactMarkdown>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold flex items-center gap-2">
+              <ListOrdered className="h-5 w-5 text-primary" />
+              Resolução por Item
+            </h3>
+            {response.questionItems.map((item, i) => {
+              const itemStepId = `item-steps-${item.letter}`;
+              const isItemStepsExpanded = expandedSteps.includes(itemStepId);
+              
+              return (
+                <Card key={i} data-testid={`item-${item.letter}`}>
+                  <CardHeader className="pb-2 bg-primary/5">
+                    <CardTitle className="text-base flex items-center gap-3">
+                      <Badge variant="default" className="text-sm px-3 py-1">
+                        Item {item.letter}
+                      </Badge>
+                      <span className="text-sm font-normal">{item.description}</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-4 space-y-4">
+                    {(item.formulas && item.formulas.length > 0) && (
+                      <div className="bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 p-4 rounded-md">
+                        <p className="text-sm font-semibold text-green-800 dark:text-green-200 mb-2 flex items-center gap-2">
+                          <Calculator className="h-4 w-4" />
+                          Fórmulas para usar na prova:
+                        </p>
+                        <div className="space-y-2">
+                          {item.formulas.map((formula, fi) => (
+                            <div key={fi} className="bg-white dark:bg-green-900 p-3 rounded border border-green-300 dark:border-green-700 prose prose-sm dark:prose-invert max-w-none">
+                              <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]}>
+                                {formula}
+                              </ReactMarkdown>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {(item.concepts && item.concepts.length > 0) && (
+                      <div>
+                        <p className="text-sm font-medium mb-2 flex items-center gap-2">
+                          <BookOpen className="h-4 w-4 text-primary" />
+                          Conceitos utilizados:
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          {item.concepts.map((concept, ci) => (
+                            <Badge key={ci} variant="secondary">{concept}</Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {item.finalResult && (
+                      <div className="bg-primary/10 border border-primary/30 p-4 rounded-md">
+                        <p className="text-sm font-semibold text-primary mb-2 flex items-center gap-2">
+                          <CheckCircle className="h-4 w-4" />
+                          Resultado Final:
+                        </p>
+                        <div className="prose prose-sm dark:prose-invert max-w-none text-lg font-medium">
+                          <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]}>
+                            {item.finalResult}
+                          </ReactMarkdown>
+                        </div>
+                      </div>
+                    )}
+
+                    {item.detailedCalculation && (
+                      <div className="bg-muted p-4 rounded-md">
+                        <p className="text-sm font-semibold mb-3 flex items-center gap-2">
+                          <Calculator className="h-4 w-4 text-primary" />
+                          Cálculo Detalhado:
+                        </p>
+                        <div className="prose prose-sm dark:prose-invert max-w-none">
+                          <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]}>
+                            {item.detailedCalculation}
+                          </ReactMarkdown>
+                        </div>
+                      </div>
+                    )}
+
+                    {(item.solutionSteps && item.solutionSteps.length > 0) && (
+                      <Collapsible open={isItemStepsExpanded} onOpenChange={() => toggleStep(itemStepId)}>
+                        <CollapsibleTrigger asChild>
+                          <Button
+                            variant="outline"
+                            className="w-full justify-between"
+                            data-testid={`button-item-steps-${item.letter}`}
+                          >
+                            <span className="flex items-center gap-2">
+                              <Sparkles className="h-4 w-4" />
+                              Ver etapas detalhadas do raciocínio
+                            </span>
+                            {isItemStepsExpanded ? (
+                              <ChevronUp className="h-4 w-4" />
+                            ) : (
+                              <ChevronDown className="h-4 w-4" />
+                            )}
+                          </Button>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent className="pt-4 space-y-3">
+                          {item.solutionSteps.map((step, si) => (
+                            <div key={si} className="border-l-2 border-muted-foreground/30 pl-4">
+                              <p className="text-sm font-medium mb-1">{si + 1}. {step.title}</p>
+                              <div className="prose prose-sm dark:prose-invert max-w-none text-muted-foreground">
+                                <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]}>
+                                  {step.content}
+                                </ReactMarkdown>
+                              </div>
+                            </div>
+                          ))}
+                        </CollapsibleContent>
+                      </Collapsible>
+                    )}
+
+                    {!item.formulas && !item.detailedCalculation && item.solution && (
+                      <div className="bg-muted p-4 rounded-md">
+                        <p className="text-sm font-medium mb-2">Solução:</p>
+                        <div className="prose prose-sm dark:prose-invert max-w-none">
+                          <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]}>
+                            {item.solution}
+                          </ReactMarkdown>
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
         )}
 
         <Card data-testid="section-steps">

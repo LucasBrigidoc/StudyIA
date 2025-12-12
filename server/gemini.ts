@@ -14,6 +14,14 @@ const ai = new GoogleGenAI({ apiKey: apiKey || "" });
 export interface QuestionItem {
   letter: string;
   description: string;
+  formulas: string[];
+  concepts: string[];
+  detailedCalculation: string;
+  finalResult: string;
+  solutionSteps?: {
+    title: string;
+    content: string;
+  }[];
   solution: string;
 }
 
@@ -153,11 +161,25 @@ IMPORTANTE: Retorne APENAS um JSON válido no seguinte formato (sem markdown, se
     {
       "letter": "A",
       "description": "O que o item A está pedindo",
-      "solution": "Resolução completa do item A com fórmulas e cálculos em markdown"
+      "formulas": ["$$F = ma$$", "$$v = v_0 + at$$"],
+      "concepts": ["Segunda Lei de Newton", "MRUV"],
+      "detailedCalculation": "## Cálculo Detalhado\\n\\n**Passo 1:** Identificar...\\n**Passo 2:** Substituir valores...\\n**Passo 3:** Calcular...",
+      "finalResult": "$$x = 10 \\text{ m}$$",
+      "solutionSteps": [
+        {"title": "Identificação dos dados", "content": "Massa m = 5kg..."},
+        {"title": "Aplicação da fórmula", "content": "Usando F = ma..."},
+        {"title": "Cálculo final", "content": "Resultado: 10 m"}
+      ],
+      "solution": "Resolução completa do item A (usado como fallback)"
     },
     {
       "letter": "B",
       "description": "O que o item B está pedindo",
+      "formulas": ["$$E = mc^2$$"],
+      "concepts": ["Relatividade"],
+      "detailedCalculation": "Cálculo detalhado do item B...",
+      "finalResult": "$$E = 9 \\times 10^{16} J$$",
+      "solutionSteps": [],
       "solution": "Resolução completa do item B"
     }
   ],
