@@ -82,6 +82,24 @@ export function FolderDetailModal({
     setInfoMode("collapsed");
   };
 
+  const handleClearInfo = async () => {
+    if (!folder) return;
+    setSaving(true);
+    try {
+      await updateFolder(folder.id, { bookReference: "", notes: "" });
+      setBookReference("");
+      setNotes("");
+      setSavedBookReference("");
+      setSavedNotes("");
+      setInfoMode("collapsed");
+      onFilesChange?.();
+    } catch (error) {
+      console.error("Error clearing folder info:", error);
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const loadFiles = async () => {
     if (!folder) return;
     setLoading(true);
@@ -240,7 +258,7 @@ export function FolderDetailModal({
                 data-testid="input-notes"
               />
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
               <Button 
                 onClick={handleSaveInfo} 
                 disabled={saving}
@@ -260,6 +278,18 @@ export function FolderDetailModal({
               >
                 Cancelar
               </Button>
+              {hasInfo && (
+                <Button 
+                  onClick={handleClearInfo}
+                  variant="destructive"
+                  size="sm"
+                  disabled={saving}
+                  data-testid="button-clear-info"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Limpar
+                </Button>
+              )}
             </div>
           </Card>
         )}
