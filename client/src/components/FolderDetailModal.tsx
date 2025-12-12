@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { X, Upload, FileText, Trash2, Loader2, Book, StickyNote } from "lucide-react";
+import { X, Upload, FileText, Trash2, Loader2, Book, StickyNote, Plus, Pencil } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -11,6 +11,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Card } from "@/components/ui/card";
 import {
   type ContextFolder,
   type ContextFile,
@@ -19,6 +20,8 @@ import {
   deleteFile,
   updateFolder,
 } from "@/lib/indexedDB";
+
+type InfoMode = "collapsed" | "editing";
 
 interface FolderDetailModalProps {
   folder: ContextFolder | null;
@@ -38,14 +41,22 @@ export function FolderDetailModal({
   const [uploading, setUploading] = useState(false);
   const [bookReference, setBookReference] = useState("");
   const [notes, setNotes] = useState("");
+  const [savedBookReference, setSavedBookReference] = useState("");
+  const [savedNotes, setSavedNotes] = useState("");
   const [saving, setSaving] = useState(false);
+  const [infoMode, setInfoMode] = useState<InfoMode>("collapsed");
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const hasInfo = savedBookReference || savedNotes;
 
   useEffect(() => {
     if (folder && open) {
       loadFiles();
       setBookReference(folder.bookReference || "");
       setNotes(folder.notes || "");
+      setSavedBookReference(folder.bookReference || "");
+      setSavedNotes(folder.notes || "");
+      setInfoMode("collapsed");
     }
   }, [folder, open]);
 
@@ -54,12 +65,21 @@ export function FolderDetailModal({
     setSaving(true);
     try {
       await updateFolder(folder.id, { bookReference, notes });
+      setSavedBookReference(bookReference);
+      setSavedNotes(notes);
+      setInfoMode("collapsed");
       onFilesChange?.();
     } catch (error) {
       console.error("Error saving folder info:", error);
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleCancelEdit = () => {
+    setBookReference(savedBookReference);
+    setNotes(savedNotes);
+    setInfoMode("collapsed");
   };
 
   const loadFiles = async () => {
@@ -143,48 +163,106 @@ export function FolderDetailModal({
           className="hidden"
         />
 
-        <div className="space-y-4 mb-4">
-          <div className="space-y-2">
-            <Label htmlFor="bookReference" className="flex items-center gap-2">
-              <Book className="h-4 w-4" />
-              Livro de Referência
-            </Label>
-            <Input
-              id="bookReference"
-              placeholder="Ex: Halliday, Resnick - Fundamentos de Física Vol. 1"
-              value={bookReference}
-              onChange={(e) => setBookReference(e.target.value)}
-              data-testid="input-book-reference"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="notes" className="flex items-center gap-2">
-              <StickyNote className="h-4 w-4" />
-              Outras Informações
-            </Label>
-            <Textarea
-              id="notes"
-              placeholder="Adicione informações extras sobre esta matéria..."
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              className="resize-none"
-              rows={3}
-              data-testid="input-notes"
-            />
-          </div>
-          <Button 
-            onClick={handleSaveInfo} 
-            disabled={saving}
-            variant="secondary"
-            size="sm"
-            data-testid="button-save-info"
+        {infoMode === "collapsed" && !hasInfo && (
+          <Button
+            variant="outline"
+            onClick={() => setInfoMode("editing")}
+            className="w-full"
+            data-testid="button-add-info"
           >
-            {saving ? (
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-            ) : null}
-            Salvar Informações
+            <Plus className="h-4 w-4 mr-2" />
+            Adicionar Informações
           </Button>
-        </div>
+        )}
+
+        {infoMode === "collapsed" && hasInfo && (
+          <Card className="p-4">
+            <div className="flex justify-between items-start gap-4">
+              <div className="flex-1 space-y-3">
+                {savedBookReference && (
+                  <div className="flex items-start gap-2">
+                    <Book className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
+                    <div>
+                      <p className="text-xs text-muted-foreground">Livro de Referência</p>
+                      <p className="text-sm" data-testid="text-book-reference">{savedBookReference}</p>
+                    </div>
+                  </div>
+                )}
+                {savedNotes && (
+                  <div className="flex items-start gap-2">
+                    <StickyNote className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
+                    <div>
+                      <p className="text-xs text-muted-foreground">Outras Informações</p>
+                      <p className="text-sm whitespace-pre-wrap" data-testid="text-notes">{savedNotes}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setInfoMode("editing")}
+                data-testid="button-edit-info"
+              >
+                <Pencil className="h-4 w-4" />
+              </Button>
+            </div>
+          </Card>
+        )}
+
+        {infoMode === "editing" && (
+          <Card className="p-4 space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="bookReference" className="flex items-center gap-2">
+                <Book className="h-4 w-4" />
+                Livro de Referência
+              </Label>
+              <Input
+                id="bookReference"
+                placeholder="Ex: Halliday, Resnick - Fundamentos de Física Vol. 1"
+                value={bookReference}
+                onChange={(e) => setBookReference(e.target.value)}
+                data-testid="input-book-reference"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="notes" className="flex items-center gap-2">
+                <StickyNote className="h-4 w-4" />
+                Outras Informações
+              </Label>
+              <Textarea
+                id="notes"
+                placeholder="Adicione informações extras sobre esta matéria..."
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                className="resize-none"
+                rows={3}
+                data-testid="input-notes"
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button 
+                onClick={handleSaveInfo} 
+                disabled={saving}
+                size="sm"
+                data-testid="button-save-info"
+              >
+                {saving ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : null}
+                Salvar
+              </Button>
+              <Button 
+                onClick={handleCancelEdit}
+                variant="outline"
+                size="sm"
+                data-testid="button-cancel-edit"
+              >
+                Cancelar
+              </Button>
+            </div>
+          </Card>
+        )}
 
         <div className="flex justify-between items-center gap-2">
           <p className="text-sm text-muted-foreground">
