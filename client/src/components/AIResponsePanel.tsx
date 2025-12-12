@@ -10,7 +10,11 @@ import {
   BookOpen,
   Calculator,
   ClipboardCheck,
-  Sparkles
+  Sparkles,
+  AlertTriangle,
+  AlertCircle,
+  Shield,
+  BookMarked
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -42,6 +46,14 @@ interface AIResponse {
   finalAnswer: string;
   usedMaterials: string[];
   shortVersion: string;
+  confidence?: "alta" | "media" | "baixa";
+  confidenceReason?: string;
+  warnings?: string[];
+  missingData?: string[];
+  sourceCitations?: {
+    formula: string;
+    source: string;
+  }[];
 }
 
 interface AIResponsePanelProps {
@@ -104,12 +116,107 @@ export function AIResponsePanel({ response, isLoading }: AIResponsePanelProps) {
     Calculator,
     ClipboardCheck,
     Calculator,
+    Calculator,
+    CheckCircle,
+    Shield,
     CheckCircle,
   ];
+
+  const getConfidenceColor = (confidence: string) => {
+    switch (confidence) {
+      case "alta":
+        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
+      case "media":
+        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200";
+      case "baixa":
+        return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
+      default:
+        return "bg-muted";
+    }
+  };
+
+  const getConfidenceIcon = (confidence: string) => {
+    switch (confidence) {
+      case "alta":
+        return <Shield className="h-4 w-4" />;
+      case "media":
+        return <AlertCircle className="h-4 w-4" />;
+      case "baixa":
+        return <AlertTriangle className="h-4 w-4" />;
+      default:
+        return <Shield className="h-4 w-4" />;
+    }
+  };
 
   return (
     <ScrollArea className="h-full">
       <div className="space-y-4 p-1">
+        {response.confidence && (
+          <Card data-testid="section-confidence">
+            <CardContent className="pt-4">
+              <div className="flex items-center justify-between gap-4 flex-wrap">
+                <div className="flex items-center gap-2">
+                  {getConfidenceIcon(response.confidence)}
+                  <span className="font-medium">Nível de Confiança:</span>
+                  <Badge className={getConfidenceColor(response.confidence)}>
+                    {response.confidence.toUpperCase()}
+                  </Badge>
+                </div>
+                {response.confidenceReason && (
+                  <p className="text-sm text-muted-foreground">
+                    {response.confidenceReason}
+                  </p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {response.warnings && response.warnings.length > 0 && (
+          <Card className="border-yellow-500" data-testid="section-warnings">
+            <CardHeader className="pb-2 bg-yellow-50 dark:bg-yellow-950">
+              <CardTitle className="text-base flex items-center gap-2 text-yellow-700 dark:text-yellow-300">
+                <AlertTriangle className="h-4 w-4" />
+                Avisos Importantes
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-4">
+              <ul className="space-y-2">
+                {response.warnings.map((warning, i) => (
+                  <li key={i} className="flex items-start gap-2 text-sm">
+                    <AlertCircle className="h-4 w-4 text-yellow-600 mt-0.5 flex-shrink-0" />
+                    <span>{warning}</span>
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
+        )}
+
+        {response.missingData && response.missingData.length > 0 && (
+          <Card className="border-red-500" data-testid="section-missing">
+            <CardHeader className="pb-2 bg-red-50 dark:bg-red-950">
+              <CardTitle className="text-base flex items-center gap-2 text-red-700 dark:text-red-300">
+                <AlertTriangle className="h-4 w-4" />
+                Dados Faltantes no Problema
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-4">
+              <p className="text-sm text-muted-foreground mb-2">
+                Os seguintes dados não foram fornecidos no enunciado:
+              </p>
+              <ul className="space-y-1">
+                {response.missingData.map((data, i) => (
+                  <li key={i} className="flex items-center gap-2 text-sm font-medium">
+                    <span className="text-red-500">-</span>
+                    <span>{data}</span>
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
+        )}
+
         <Card data-testid="section-question">
           <CardHeader className="flex flex-row items-center justify-between gap-2 pb-2">
             <CardTitle className="text-base flex items-center gap-2">
@@ -269,6 +376,24 @@ export function AIResponsePanel({ response, isLoading }: AIResponsePanelProps) {
                     <Badge key={i} variant="secondary">
                       {material}
                     </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {response.sourceCitations && response.sourceCitations.length > 0 && (
+              <div className="mt-4 pt-4 border-t">
+                <p className="text-sm font-medium mb-2 flex items-center gap-2">
+                  <BookMarked className="h-4 w-4" />
+                  Fórmulas e Fontes:
+                </p>
+                <div className="space-y-2">
+                  {response.sourceCitations.map((citation, i) => (
+                    <div key={i} className="flex items-center gap-2 text-sm bg-muted p-2 rounded-md">
+                      <code className="font-mono text-primary">{citation.formula}</code>
+                      <span className="text-muted-foreground">-</span>
+                      <span className="text-muted-foreground">{citation.source}</span>
+                    </div>
                   ))}
                 </div>
               </div>

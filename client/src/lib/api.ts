@@ -17,6 +17,14 @@ export interface SolveResponse {
   finalAnswer: string;
   usedMaterials: string[];
   shortVersion: string;
+  confidence: "alta" | "media" | "baixa";
+  confidenceReason?: string;
+  warnings: string[];
+  missingData: string[];
+  sourceCitations: {
+    formula: string;
+    source: string;
+  }[];
 }
 
 export interface FolderInfo {

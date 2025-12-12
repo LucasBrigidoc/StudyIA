@@ -28,6 +28,14 @@ export interface SolveResponse {
   finalAnswer: string;
   usedMaterials: string[];
   shortVersion: string;
+  confidence: "alta" | "media" | "baixa";
+  confidenceReason?: string;
+  warnings: string[];
+  missingData: string[];
+  sourceCitations: {
+    formula: string;
+    source: string;
+  }[];
 }
 
 export interface FolderInfo {
@@ -55,6 +63,12 @@ IMPORTANTE: Utilize as fórmulas, métodos e abordagem deste livro para resolver
   }
 
   return `Você é o SolveAI, especialista em resolver questões acadêmicas usando um fluxo estruturado e verificações rigorosas.
+
+REGRAS CRÍTICAS DE INTEGRIDADE:
+1. NUNCA invente dados que não estão no problema. Se faltar algum dado necessário, liste em "missingData".
+2. NUNCA use fórmulas sem citar a fonte exata (slide X, página Y, ou "conhecimento geral").
+3. Se não tiver 100% de certeza, defina confidence como "media" ou "baixa" e explique em confidenceReason.
+4. Se algo parecer estranho ou ambíguo, adicione em "warnings".
 ${folderInfoText}
 ${contextMaterials.length > 0 ? "Use OBRIGATORIAMENTE os materiais da pasta fornecida abaixo:" : ""}
 
@@ -66,16 +80,19 @@ ${questionText}
 
 Execute o seguinte fluxo e retorne um JSON estruturado:
 
-ETAPA 1 — INTERPRETAÇÃO  
+ETAPA 1 — INTERPRETAÇÃO E DETECÇÃO DE DADOS FALTANTES
 - Transcreva o enunciado completo
 - Liste TODOS os dados fornecidos (valores numéricos, unidades, condições)
 - Diga exatamente o que cada item (a, b, c, etc.) está pedindo
 - Se houver itens A), B), C) etc., identifique e explique o que cada um pede SEPARADAMENTE
+- VERIFIQUE se algum dado necessário NÃO foi fornecido no problema
+- Se faltar dados, liste-os em "missingData" e NÃO INVENTE valores
 - Relacione com materiais da pasta (slide, fórmula, exemplo) se disponíveis
 - Crie um plano de solução
 
-ETAPA 2 — SOLUÇÃO A  
+ETAPA 2 — SOLUÇÃO A COM CITAÇÃO DE FONTES
 - Resolva passo a passo cada item
+- Para CADA fórmula usada, cite a fonte exata: "Fórmula X (Slide 3)" ou "Equação Y (página 45 do livro)" ou "Fórmula Z (conhecimento geral de física)"
 - Usando EXATAMENTE as fórmulas/métodos do material (se disponível)
 - Com unidades, substituições e cálculos organizados
 - Para cada item (A, B, C), mostre a resolução separada
@@ -93,11 +110,17 @@ ETAPA 5 — CONSISTÊNCIA
 - Compare A e B  
 - Se houver diferença, corrija e produza Solução C
 
-ETAPA 6 — VERIFICAÇÃO MATEMÁTICA  
-- Recalcular tudo  
-- Verificar unidades, arredondamento e lógica
+ETAPA 6 — ANÁLISE DIMENSIONAL
+- Verifique se TODAS as unidades estão corretas em cada cálculo
+- Confirme que o resultado final tem a unidade esperada
+- Exemplo: metros + metros = metros (OK), metros + segundos = ERRO
+- Se houver erro de unidades, corrija a solução
 
-ETAPA 7 — VERIFICAÇÃO REVERSA (BACK-CHECK)
+ETAPA 7 — VERIFICAÇÃO MATEMÁTICA  
+- Recalcular tudo  
+- Verificar arredondamento e lógica
+
+ETAPA 8 — VERIFICAÇÃO REVERSA (BACK-CHECK)
 - Pegue a resposta final obtida
 - Substitua de volta na equação/problema original
 - Verifique se os valores batem e fazem sentido
@@ -106,13 +129,21 @@ ETAPA 7 — VERIFICAÇÃO REVERSA (BACK-CHECK)
 - Verifique se a ordem de grandeza faz sentido (ex: velocidade de carro não pode ser 50.000 km/h)
 - Se a verificação falhar, identifique o erro e corrija a solução
 
-ETAPA 8 — RESPOSTA FINAL  
+ETAPA 9 — AVALIAÇÃO DE CONFIANÇA
+- Avalie sua confiança na resposta: "alta", "media" ou "baixa"
+- "alta": Todos os dados disponíveis, cálculos verificados, back-check passou
+- "media": Alguma ambiguidade no enunciado OU não tinha material de referência
+- "baixa": Dados faltando OU múltiplas interpretações possíveis OU back-check falhou
+- Explique o motivo da sua avaliação em confidenceReason
+
+ETAPA 10 — RESPOSTA FINAL  
 - Resposta final validada para cada item
 - Passo a passo
-- Fórmulas usadas
+- Fórmulas usadas com citação de fonte
 - Resultado da verificação reversa
 - Versão curta para prova
 - Indicação do material utilizado (se houver)
+- Liste todos os avisos importantes em "warnings"
 
 IMPORTANTE: Retorne APENAS um JSON válido no seguinte formato (sem markdown, sem texto extra):
 {
@@ -131,18 +162,28 @@ IMPORTANTE: Retorne APENAS um JSON válido no seguinte formato (sem markdown, se
     }
   ],
   "steps": [
-    {"title": "Interpretação", "content": "análise detalhada"},
-    {"title": "Solução A", "content": "resolução passo a passo"},
+    {"title": "Interpretação", "content": "análise detalhada + dados faltantes identificados"},
+    {"title": "Solução A", "content": "resolução passo a passo com citação de fontes"},
     {"title": "Verificação de Aderência", "content": "conferência"},
     {"title": "Solução B", "content": "segunda resolução"},
     {"title": "Consistência", "content": "comparação"},
+    {"title": "Análise Dimensional", "content": "verificação de unidades"},
     {"title": "Verificação Matemática", "content": "recálculo"},
     {"title": "Verificação Reversa", "content": "substituição da resposta no problema original para confirmar"},
-    {"title": "Resposta Final", "content": "validação final"}
+    {"title": "Avaliação de Confiança", "content": "nível de certeza e justificativa"},
+    {"title": "Resposta Final", "content": "validação final com avisos"}
   ],
   "finalAnswer": "Resposta final formatada em markdown com todas as respostas",
   "usedMaterials": ["material 1 usado", "material 2"],
-  "shortVersion": "Respostas resumidas: a) X | b) Y | c) Z"
+  "shortVersion": "Respostas resumidas: a) X | b) Y | c) Z",
+  "confidence": "alta | media | baixa",
+  "confidenceReason": "Explicação do nível de confiança",
+  "warnings": ["Aviso 1 se houver ambiguidade", "Aviso 2 se algo parecer estranho"],
+  "missingData": ["Dado que faltou no problema e não foi inventado"],
+  "sourceCitations": [
+    {"formula": "F = ma", "source": "Slide 3 - Leis de Newton"},
+    {"formula": "v = d/t", "source": "Conhecimento geral de física"}
+  ]
 }
 
 Se a questão não tiver itens separados (a, b, c), deixe questionItems como array vazio e coloque toda a resolução em steps e finalAnswer.`;
@@ -169,6 +210,7 @@ export async function solveQuestion(
       contents: prompt,
       config: {
         responseMimeType: "application/json",
+        temperature: 0.1,
       },
     });
 
@@ -190,6 +232,11 @@ export async function solveQuestion(
       finalAnswer: data.finalAnswer || "Não foi possível gerar a resposta.",
       usedMaterials: data.usedMaterials || contextMaterials,
       shortVersion: data.shortVersion || "",
+      confidence: data.confidence || "media",
+      confidenceReason: data.confidenceReason || "",
+      warnings: data.warnings || [],
+      missingData: data.missingData || [],
+      sourceCitations: data.sourceCitations || [],
     };
   } catch (error) {
     console.error("Error calling Gemini:", error);
