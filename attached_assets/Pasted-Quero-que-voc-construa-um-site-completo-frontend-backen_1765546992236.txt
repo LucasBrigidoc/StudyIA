@@ -1,0 +1,146 @@
+Quero que você construa um site completo (frontend + backend simples) que siga exatamente as instruções abaixo.
+
+====================================================================
+                  OBJETIVO DO SITE — SolveAI Educacional
+====================================================================
+
+Construir um site com duas telas principais:
+
+1) TELA PRINCIPAL  
+   Área onde o usuário faz upload de:
+   - Foto de uma lista de questões
+   - PDF de uma lista de questões
+   - Ou texto das questões
+
+   Botão: “Resolver usando Contexto”
+
+2) TELA DE PASTAS DE CONTEXTO  
+   Área onde o usuário cria pastas contendo materiais da disciplina:  
+   - Slides (PDF ou imagens)  
+   - Fotos do quadro  
+   - Anotações pessoais  
+   - Fórmulas importantes  
+   - Regras do professor  
+   - PDF do livro usado na cadeira  
+
+Esses materiais devem ser armazenados em uma estrutura (JSON ou banco simples) para serem usados depois no prompt enviado à IA.
+
+====================================================================
+              LÓGICA PRINCIPAL — FLOW QUE A IA DEVE SEGUIR
+====================================================================
+
+Quando o usuário clicar em “Resolver usando Contexto”, o sistema deve:
+
+1) Ler a imagem/PDF e extrair texto com OCR.
+2) Buscar todos os materiais da PASTA selecionada.
+3) Montar automaticamente um prompt para a IA seguindo o seguinte fluxo:
+
+--------------------------------------------------------------------
+PROMPT PARA A IA (GERADO AUTOMATICAMENTE PELO SITE):
+--------------------------------------------------------------------
+
+"Você é o SolveAI, especialista em resolver questões acadêmicas usando um fluxo estruturado e verificações rigorosas. Use OBRIGATORIAMENTE os materiais da pasta fornecida abaixo:
+
+[MATERIAIS DA PASTA EM TEXTO]
+
+Agora, execute o seguinte fluxo:
+
+ETAPA 1 — INTERPRETAÇÃO  
+- Transcreva o enunciado.  
+- Liste os dados fornecidos.  
+- Diga exatamente o que o enunciado quer.  
+- Relacione com materiais da pasta (slide, fórmula, exemplo).  
+- Crie um plano de solução.
+
+ETAPA 2 — SOLUÇÃO A  
+- Resolva passo a passo  
+- Usando EXATAMENTE as fórmulas/métodos do material  
+- Com unidades, substituições e cálculos organizados
+
+ETAPA 3 — VERIFICAÇÃO DE ADERÊNCIA  
+- Confira se a solução segue o professor/material  
+- Confira se algum dado foi ignorado  
+- Ajuste se necessário.
+
+ETAPA 4 — SOLUÇÃO B (INDEPENDENTE)  
+- Refazer a questão sem olhar a solução A  
+- Usando o mesmo método da pasta
+
+ETAPA 5 — CONSISTÊNCIA  
+- Compare A e B  
+- Se houver diferença, corrija e produza Solução C
+
+ETAPA 6 — VERIFICAÇÃO MATEMÁTICA  
+- Recalcular tudo  
+- Verificar unidades, arredondamento e lógica
+
+ETAPA 7 — RESPOSTA FINAL  
+- Resposta final validada  
+- Passo a passo  
+- Fórmulas usadas (somente as da pasta)  
+- Versão curta para prova  
+- Indicação do material utilizado"
+
+--------------------------------------------------------------------
+
+O site deve enviar ISSO para a IA quando o usuário clicar no botão.
+
+====================================================================
+                   REQUISITOS DE IMPLEMENTAÇÃO
+====================================================================
+
+• Use HTML, CSS e JavaScript PURO ou React (você escolhe).  
+• Interface simples, organizada e intuitiva.  
+• Sistema de upload de arquivos com pré-visualização.  
+• Pastas de contexto salvas localmente em JSON.  
+• Cada pasta pode ter múltiplos arquivos.  
+• O usuário escolhe qual pasta usar antes de resolver as questões.  
+• Botão de “Gerar Prompt e Enviar para IA”.  
+• Resultado da IA deve aparecer em um painel de resposta com formatação.  
+
+====================================================================
+                      COMPONENTES NECESSÁRIOS
+====================================================================
+
+TELA 1 — PRINCIPAL  
+✔ Upload de imagem/PDF  
+✔ OCR automático  
+✔ Área para colar texto manualmente  
+✔ Drop-down “Escolher pasta de contexto”  
+✔ Botão “Resolver usando Contexto”  
+✔ Área de resposta da IA
+
+TELA 2 — PASTAS  
+✔ Criar pasta com nome  
+✔ Upload de múltiplos arquivos  
+✔ Excluir arquivo  
+✔ Armazenar arquivos no browser (IndexedDB ou LocalStorage)  
+✔ Visualizar conteúdo da pasta  
+
+====================================================================
+                ENTREGÁVEL QUE EU QUERO DO REPLIT AI
+====================================================================
+
+Quero que você gere:
+
+1) A ESTRUTURA COMPLETA DO SITE  
+2) Todo o HTML + CSS  
+3) Todo o JavaScript necessário  
+4) Funções de gerenciamento de pastas  
+5) Função que monta o prompt automaticamente  
+6) Função que integra com a API de IA (crie endpoint fictício)  
+7) Tela elegante e intuitiva
+
+Código organizado em múltiplos arquivos (se possível):
+- index.html  
+- style.css  
+- app.js  
+- contextManager.js  
+- ocr.js (stub)  
+- aiRequest.js (stub)  
+- utils.js  
+
+====================================================================
+IMPORTANTE:
+O Replit deve gerar TODO O SITE, funcionando do início ao fim.
+====================================================================
