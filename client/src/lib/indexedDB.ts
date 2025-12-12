@@ -1,6 +1,8 @@
 export interface ContextFolder {
   id: string;
   name: string;
+  bookReference?: string;
+  notes?: string;
   createdAt: Date;
 }
 
@@ -93,6 +95,31 @@ export async function deleteFolder(id: string): Promise<void> {
 
     request.onerror = () => reject(request.error);
     request.onsuccess = () => resolve();
+  });
+}
+
+export async function updateFolder(id: string, updates: Partial<Pick<ContextFolder, "bookReference" | "notes">>): Promise<ContextFolder> {
+  const database = await initDB();
+  
+  return new Promise((resolve, reject) => {
+    const transaction = database.transaction("folders", "readwrite");
+    const store = transaction.objectStore("folders");
+    const getRequest = store.get(id);
+
+    getRequest.onerror = () => reject(getRequest.error);
+    getRequest.onsuccess = () => {
+      const folder = getRequest.result as ContextFolder;
+      if (!folder) {
+        reject(new Error("Folder not found"));
+        return;
+      }
+      
+      const updatedFolder = { ...folder, ...updates };
+      const putRequest = store.put(updatedFolder);
+      
+      putRequest.onerror = () => reject(putRequest.error);
+      putRequest.onsuccess = () => resolve(updatedFolder);
+    };
   });
 }
 

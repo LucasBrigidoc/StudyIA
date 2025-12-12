@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { X, Upload, FileText, Trash2, Loader2 } from "lucide-react";
+import { X, Upload, FileText, Trash2, Loader2, Book, StickyNote } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -8,12 +8,16 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import {
   type ContextFolder,
   type ContextFile,
   getFilesByFolder,
   addFile,
   deleteFile,
+  updateFolder,
 } from "@/lib/indexedDB";
 
 interface FolderDetailModalProps {
@@ -32,13 +36,31 @@ export function FolderDetailModal({
   const [files, setFiles] = useState<ContextFile[]>([]);
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [bookReference, setBookReference] = useState("");
+  const [notes, setNotes] = useState("");
+  const [saving, setSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (folder && open) {
       loadFiles();
+      setBookReference(folder.bookReference || "");
+      setNotes(folder.notes || "");
     }
   }, [folder, open]);
+
+  const handleSaveInfo = async () => {
+    if (!folder) return;
+    setSaving(true);
+    try {
+      await updateFolder(folder.id, { bookReference, notes });
+      onFilesChange?.();
+    } catch (error) {
+      console.error("Error saving folder info:", error);
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const loadFiles = async () => {
     if (!folder) return;
@@ -121,7 +143,50 @@ export function FolderDetailModal({
           className="hidden"
         />
 
-        <div className="flex justify-between items-center">
+        <div className="space-y-4 mb-4">
+          <div className="space-y-2">
+            <Label htmlFor="bookReference" className="flex items-center gap-2">
+              <Book className="h-4 w-4" />
+              Livro de Referência
+            </Label>
+            <Input
+              id="bookReference"
+              placeholder="Ex: Halliday, Resnick - Fundamentos de Física Vol. 1"
+              value={bookReference}
+              onChange={(e) => setBookReference(e.target.value)}
+              data-testid="input-book-reference"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="notes" className="flex items-center gap-2">
+              <StickyNote className="h-4 w-4" />
+              Outras Informações
+            </Label>
+            <Textarea
+              id="notes"
+              placeholder="Adicione informações extras sobre esta matéria..."
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              className="resize-none"
+              rows={3}
+              data-testid="input-notes"
+            />
+          </div>
+          <Button 
+            onClick={handleSaveInfo} 
+            disabled={saving}
+            variant="secondary"
+            size="sm"
+            data-testid="button-save-info"
+          >
+            {saving ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : null}
+            Salvar Informações
+          </Button>
+        </div>
+
+        <div className="flex justify-between items-center gap-2">
           <p className="text-sm text-muted-foreground">
             {files.length} arquivo{files.length !== 1 ? "s" : ""} nesta pasta
           </p>
